@@ -1,0 +1,25 @@
+opam-version: "1.2"
+version: "dev"
+name: "changeset"
+authors: ["Paul Laforgue <paul.laforgue123@gmail.com>"]
+maintainer: "Paul Laforgue <paul.laforgue123@gmail.com>"
+doc: "http://phink.github.io/changeset/doc"
+homepage: "https://github.com/phink/changeset"
+license: "MIT"
+dev-repo: "http://github.com/phink/changeset.git"
+bug-reports: "https://github.com/phink/changeset/issues"
+
+available: [
+  ocaml-version >= "4.04.2"
+]
+
+depends: [
+  "jbuilder" {build}
+  "base" {>= "0.10"}
+  "odoc"
+  "ppx_inline_test" {with-test & >= "0.11.0"}
+]
+
+build: [
+  ["jbuilder" "build" "-p" name "-j" jobs]
+]

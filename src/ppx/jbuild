@@ -1,0 +1,10 @@
+(library
+ ((name ppx_changeset)
+  (public_name ppx_changeset)
+  (kind ppx_deriver)
+  (libraries (base ppxlib))
+  (preprocess (pps (ppxlib.metaquot ppxlib.runner)))
+  (ppx_runtime_libraries (base changeset))
+))
+
+(jbuild_version 1)

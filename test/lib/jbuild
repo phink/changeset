@@ -1,0 +1,7 @@
+(jbuild_version 1)
+
+(library
+ ((name changeset_test)
+  (inline_tests)
+  (libraries (base stdio changeset))
+  (preprocess (pps (ppx_inline_test)))))

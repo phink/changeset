@@ -1,0 +1,15 @@
+(jbuild_version 1)
+
+(library
+ ((name changeset)
+  (public_name changeset)
+  (libraries (base str))
+))
+
+; we need the dev version of jbuilder or dune to build the
+; documentation because of index.mld
+
+(documentation
+ ((package changeset)
+  (mld_files (index)))
+)
