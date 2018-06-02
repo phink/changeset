@@ -1,0 +1,231 @@
+{1:homepage Homepage for the [changeset] library}
+
+Data validation with first-class and first-order labels in OCaml.
+
+Library documentation {{:Changeset/index.html} can be found here}.
+
+This library takes its inspiration from the
+{{: https://hexdocs.pm/ecto/Ecto.Changeset.html} Ecto.Changeset} module
+in the Elixir ecosystem.
+
+{2:getting_started Getting started}
+
+{b Changesets and data validation}.
+Changesets are tools to validate data while accumulating errors along the
+way. They are composed of:
+- {b Changes}: an heterogeneous map whose keys are of type ['a label]
+  and values ['a].
+  When deriving the changesets from a record type definition, the labels
+  correspond to the fields of this one.
+- {b Errors}: a list of strings associated with labels.
+
+Labels are first-class, that means you can give them as
+argument to functions, and first-order, so you can pattern match
+against them.
+The library promotes the {i pipeline} design approach.
+
+There is a [ppx deriving] plugin so there is no need to write
+any boilerplate code.
+
+{4 Install using opam}
+
+{[
+$ opam pin add changeset https://github.com/phink/changeset
+$ opam pin add ppx_changeset https://github.com/phink/changeset
+]}
+
+Update the libraries and preprocess section in your jbuild file:
+
+{[
+(libraries (... changeset))
+(preprocess (pps (... ppx_changeset)))
+]}
+
+
+{2:first_example Example}
+
+Let us illustrate the usage of the library with a first example.
+
+{4 Type definition and derivation}
+
+We start by defining a type [t] that would represent the incoming data.
+
+{[
+type t = {
+  age: int;
+  phone: string;
+  password: string;
+} [@@deriving changeset]
+]}
+
+The [[@@deriving changeset]] ppx annotation will generate a
+{{: https://caml.inria.fr/pub/docs/manual-ocaml-400/manual021.html#htoc113} GADT}
+definition whose constructors correspond to the fields of the original
+record type [t]. The parameter type variable of [label] aims to represent
+the corresponding type of the label in the record definition.
+In our example we have the following generated definition.
+
+{[
+type 'a label =
+  | Age : int label
+  | Phone : string label
+  | Password : string label
+]}
+
+It will also generate a module named [CSet] of type
+{!module-Changeset.module-type-S} that provides, among others,
+validation functions for the type [t].
+
+{4 The workflow}
+
+We start by defining a function [validate] that takes a changeset [cset]
+(i.e. a term of type {!module-Changeset.module-type-S.type-t}),
+applies the desired validations, and returns the changeset
+potentially augmented with new errors returned by the validations.
+
+{[
+let validate cset : CSet.t =
+  cset
+  |> CSet.validate_int Age [`greater_than_or_equal_to 0]
+  |> CSet.validate_string_length Password [`min 12]
+  |> CSet.validate_format Phone (Str.regexp "^\\+?[1-9][0-9]+$")
+]}
+
+The function [validate] takes a term of type [t],
+creates a changeset in which all the elements in [t] are loaded as changes
+using the [CSet.from_record] function and calls [validate].
+
+{[
+let create t : (t, CSet.t) Base.Result.t =
+  t
+  |> CSet.from_record
+  |> validate
+  |> CSet.apply
+]}
+
+If some of the validations were not respected, an error is registered
+and the changeset would now be considered as {b invalid}.
+
+The function [CSet.apply] returns a value of type [(t, CSet.t) Base.Result.t].
+That is,
+
+- [Ok x] if the changeset returned by [validate] is valid.
+
+- [Error cset] otherwise, where [cset] corresponds to the changeset
+  returned by [validate] if it was not valid.
+
+{3 Example of success and error reporting}
+
+{[
+let run data =
+  data
+  |> create
+  |> CSet.apply
+  |> function
+  | Ok _t -> Stdio.print_endline "OK"
+  | Error cset -> Stdio.prerr_endline (CSet.show_errors cset)
+]}
+
+{4 Example with valid data}
+
+{[
+let data : t = {
+  age = 10;
+  password = "somethinghardtohack";
+  phone = "+14155552671"
+}
+]}
+
+Outputs the following when executing [run data]:
+
+{[OK]}
+
+{4 Example with invalid data}
+
+{[
+let data : t = {
+  age = -1;
+  password = "camel<3";
+  phone = "+14155552671"
+}
+]}
+
+Outputs the following when executing [run data]:
+
+{[
+{
+  "errors":{
+    "password":"should be at least 12 character(s)";
+    "age":"must be greater than or equal to 0"
+  }
+}
+]}
+
+{4 Define your own validation functions}
+
+One can easily create its own validation with [validate_change].
+For instance, we can create [validate_one_uppercase]
+that verifies if the value bound to
+the label passed as argument contains at least one uppercase.
+Otherwise an error associating the corresponding label
+to the errom message ["should contain at least one uppercase"]
+would be registered in changeset [cset].
+
+{[
+let validate_one_uppercase label cset =
+  let message = "should contain at least one uppercase" in
+  let aux s =
+    if not Base.(String.exists s ~f:Char.is_uppercase)
+    then [message]
+    else []
+  in
+  CSet.validate_change label aux cset
+]}
+
+The original [validate] definition should be extended as follows.
+
+{[
+let validate cset =
+  cset
+  |> CSet.validate_int Age [`greater_than_or_equal_to 0]
+  |> CSet.validate_string_length Password [`min 12]
+  |> CSet.validate_format Phone (Str.regexp "^\\+?[1-9][0-9]+$")
+  |> validate_one_uppercase Password
+]}
+
+{2:dynamic Dynamic side}
+
+Information coming from the outside world is not always complete and,
+as a consequence, we usually have to deal with partial data.
+Suppose we are implementing a {i strong password generator} API
+and the only information provided are the phone number
+and the age. In json format it would be represented as:
+
+{[{"age": 9; "phone": "+14155552671"}]}
+
+The changes in a changeset correspond to an heterogeneous map
+with bindings for keys of type ['a label] to values of type ['a].
+This structure allows us to incrementally build the changeset before
+calling [CSet.apply].
+
+Remember that the job of the API is to generate passwords.
+As a consequence, when creating a new changeset we also have to generate a
+value for the password.
+Our [create] function is now defined as follows, assuming a function
+[generate_strong_password] of type [unit -> string].
+
+{[
+let create json =
+  let open Yojson.Basic.Util in
+  let age = json |> member "age" |> to_int in
+  let phone = json |> member "phone" |> to_string in
+  CSet.[Age => age; Phone => phone]
+  |> CSet.put_changes
+  |> CSet.put_change Password (generate_strong_password ())
+  |> validate
+  |> CSet.apply
+]}
+
+{2 Limitations}
+
+Parameterized source types are not yet supported.
