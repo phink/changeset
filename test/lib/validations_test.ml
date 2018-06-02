@@ -47,6 +47,28 @@ let%test _ =
   in
   is_valid cst
 
+(* - require *)
+
+let%test _ =
+  let changeset =
+    put_changes
+      [ Array => [||]
+      (* ; Bool => true *)
+      ; Int => 0
+      ; List => []
+      ; String => ""
+      ] empty
+  in
+  let new_changeset = require Bool changeset in
+  mem_error
+    (error Bool "is required")
+    new_changeset
+
+let%test _ =
+  let changeset = put_change Bool true empty in
+  let new_changeset = require Bool changeset in
+  is_valid new_changeset
+
 (* - LENGTH *)
 
 (* - validate_string_length *)
