@@ -444,5 +444,4 @@ module Make (I : Initial) : S
     let aux x = if not (Str.string_match regex x 0) then [message] else [] in
     validate_change label aux t
 
-
 end
