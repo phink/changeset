@@ -30,8 +30,8 @@ boilerplate code.
 
 #### Install using opam
 ```
-$ opam pin add changeset https://github.com/phink/changeset
-$ opam pin add ppx_changeset https://github.com/phink/changeset
+$ opam pin add changeset https://github.com/phink/changeset.git
+$ opam pin add ppx_changeset https://github.com/phink/changeset.git
 ```
 
 #### Update the libraries and preprocess section in your jbuild file:
