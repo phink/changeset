@@ -1,6 +1,6 @@
 opam-version: "1.2"
 version: "dev"
-name: "changeset"
+name: "changeset_lib"
 authors: ["Paul Laforgue <paul.laforgue123@gmail.com>"]
 maintainer: "Paul Laforgue <paul.laforgue123@gmail.com>"
 doc: "http://phink.github.io/changeset/doc"

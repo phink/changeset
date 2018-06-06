@@ -13,15 +13,15 @@ type 'a label =
   | List : int list label
   | String : string label
 
-module CSet : Changeset.S
+module Changeset : Changeset_lib.S
   with type 'a label = 'a label
-   and type source = data = Changeset.Make(struct
+   and type source = data = Changeset_lib.Make(struct
 
     type source = data
 
     type nonrec 'a label = 'a label
 
-    module Api = Changeset.Api.Make(struct type 'a t = 'a label end)
+    module Api = Changeset_lib.Api.Make(struct type 'a t = 'a label end)
 
     let sexp_of_label
       : type a. a label -> Base.Sexp.t

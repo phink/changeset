@@ -1,8 +1,8 @@
 (jbuild_version 1)
 
 (library
- ((name changeset)
-  (public_name changeset)
+ ((name changeset_lib)
+  (public_name changeset_lib)
   (libraries (base str))
 ))
 
@@ -10,6 +10,6 @@
 ; documentation because of index.mld
 
 (documentation
- ((package changeset)
+ ((package changeset_lib)
   (mld_files (index)))
 )

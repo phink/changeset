@@ -3,5 +3,5 @@
 (library
  ((name changeset_test)
   (inline_tests)
-  (libraries (base stdio changeset))
+  (libraries (base changeset_lib))
   (preprocess (pps (ppx_inline_test)))))

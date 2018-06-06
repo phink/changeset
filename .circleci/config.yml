@@ -10,7 +10,8 @@ build: &build
     - run:
         name: "Build changeset"
         command: |
-          opam pin add changeset . -y
+          opam pin add changeset_lib . -y
+          opam pin add ppx_changeset . -y
     - run:
         name: "Run test"
         command: |
