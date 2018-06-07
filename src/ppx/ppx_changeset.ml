@@ -7,10 +7,10 @@ module Common = struct
   let source_type_name = "source"
   let label_type_name = "label"
 
-  let cset_mod_name = "CSet"
+  let changeset_mod_name = "Changeset"
 
-  let changeset_mod_sig_lid = Longident.parse "Changeset.S"
-  let changeset_functor_lid = Longident.parse "Changeset.Make"
+  let changeset_mod_sig_lid = Longident.parse "Changeset_lib.S"
+  let changeset_functor_lid = Longident.parse "Changeset_lib.Make"
 
   type t = {
     expression: expression;
@@ -136,7 +136,7 @@ module Gen_structure = struct
     ]
 
   let gen_api_mod ~loc = [%stri
-    module Api = Changeset.Api.Make(struct type 'a t = 'a label end)
+    module Api = Changeset_lib.Api.Make(struct type 'a t = 'a label end)
   ]
 
   let gen_ty_eq ~loc labels =
@@ -235,7 +235,7 @@ module Gen_structure = struct
     in
     let mod_expr = pmod_apply ~loc mod_make mod_arg in
     let mod_ty = C.gen_mod_typ ~loc label_ext_s ty_ext_s in
-    let name = Located.mk ~loc (C.mk_ext_s C.cset_mod_name ty_ext_s) in
+    let name = Located.mk ~loc (C.mk_ext_s C.changeset_mod_name ty_ext_s) in
     let mod_constr = pmod_constraint ~loc mod_expr mod_ty in
     pstr_module ~loc (module_binding ~loc ~name ~expr:mod_constr)
 
@@ -267,7 +267,7 @@ module Gen_signature = struct
     psig_type ~loc Recursive [td]
 
   let gen_module_sig ~loc label_ext_s ty_ext_s =
-    let name = Located.mk ~loc (C.mk_ext_s C.cset_mod_name ty_ext_s) in
+    let name = Located.mk ~loc (C.mk_ext_s C.changeset_mod_name ty_ext_s) in
     let mod_ty = C.gen_mod_typ ~loc label_ext_s ty_ext_s in
     let mod_decl = module_declaration ~loc ~name ~type_:mod_ty in
     psig_module ~loc mod_decl

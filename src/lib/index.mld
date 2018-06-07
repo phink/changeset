@@ -11,13 +11,14 @@ in the Elixir ecosystem.
 {2:getting_started Getting started}
 
 {b Changesets and data validation}.
-Changesets are tools to validate data while accumulating errors along the
-way. They are composed of:
+Changesets are data structures well suited to validate data while accumulating
+errors along the way. They are composed of:
 - {b Changes}: an heterogeneous map whose keys are of type ['a label]
-  and values ['a].
-  When deriving the changesets from a record type definition, the labels
-  correspond to the fields of this one.
-- {b Errors}: a list of strings associated with labels.
+  and values of type ['a].
+  When using the deriving ppx plugin on a record type definition,
+  the labels correspond to the fields of this one.
+- {b Errors}: a list associating labels and strings, the last ones represent error
+  messages.
 
 Labels are first-class, that means you can give them as
 argument to functions, and first-order, so you can pattern match
@@ -30,8 +31,8 @@ any boilerplate code.
 {4 Install using opam}
 
 {[
-$ opam pin add changeset https://github.com/phink/changeset
-$ opam pin add ppx_changeset https://github.com/phink/changeset
+$ opam pin add changeset_lib https://github.com/phink/changeset.git
+$ opam pin add ppx_changeset https://github.com/phink/changeset.git
 ]}
 
 Update the libraries and preprocess section in your jbuild file:
@@ -72,41 +73,40 @@ type 'a label =
   | Password : string label
 ]}
 
-It will also generate a module named [CSet] of type
+It will also generate a module named [Changeset] of type
 {!module-Changeset.module-type-S} that provides, among others,
 validation functions for the type [t].
 
 {4 The workflow}
 
-We start by defining a function [validate] that takes a changeset [cset]
-(i.e. a term of type {!module-Changeset.module-type-S.type-t}),
+We start by defining a function [validate] that takes a changeset [cset],
 applies the desired validations, and returns the changeset
-potentially augmented with new errors returned by the validations.
+potentially augmented with new errors returned by the validation functions.
 
 {[
-let validate cset : CSet.t =
+let validate cset : Changeset.t =
   cset
-  |> CSet.validate_int Age [`greater_than_or_equal_to 0]
-  |> CSet.validate_string_length Password [`min 12]
-  |> CSet.validate_format Phone (Str.regexp "^\\+?[1-9][0-9]+$")
+  |> Changeset.validate_int Age [`greater_than_or_equal_to 0]
+  |> Changeset.validate_string_length Password [`min 12]
+  |> Changeset.validate_format Phone (Str.regexp "^\\+?[1-9][0-9]+$")
 ]}
 
 The function [validate] takes a term of type [t],
 creates a changeset in which all the elements in [t] are loaded as changes
-using the [CSet.from_record] function and calls [validate].
+using the [Changeset.from_record] function and calls [validate].
 
 {[
-let create t : (t, CSet.t) Base.Result.t =
+let create t : (t, Changeset.t) Base.Result.t =
   t
-  |> CSet.from_record
+  |> Changeset.from_record
   |> validate
-  |> CSet.apply
+  |> Changeset.apply
 ]}
 
 If some of the validations were not respected, an error is registered
 and the changeset would now be considered as {b invalid}.
 
-The function [CSet.apply] returns a value of type [(t, CSet.t) Base.Result.t].
+The function [Changeset.apply] returns a value of type [(t, Changeset.t) Base.Result.t].
 That is,
 
 - [Ok x] if the changeset returned by [validate] is valid.
@@ -120,10 +120,10 @@ That is,
 let run data =
   data
   |> create
-  |> CSet.apply
+  |> Changeset.apply
   |> function
   | Ok _t -> Stdio.print_endline "OK"
-  | Error cset -> Stdio.prerr_endline (CSet.show_errors cset)
+  | Error cset -> Stdio.prerr_endline (Changeset.show_errors cset)
 ]}
 
 {4 Example with valid data}
@@ -179,7 +179,7 @@ let validate_one_uppercase label cset =
     then [message]
     else []
   in
-  CSet.validate_change label aux cset
+  Changeset.validate_change label aux cset
 ]}
 
 The original [validate] definition should be extended as follows.
@@ -187,9 +187,9 @@ The original [validate] definition should be extended as follows.
 {[
 let validate cset =
   cset
-  |> CSet.validate_int Age [`greater_than_or_equal_to 0]
-  |> CSet.validate_string_length Password [`min 12]
-  |> CSet.validate_format Phone (Str.regexp "^\\+?[1-9][0-9]+$")
+  |> Changeset.validate_int Age [`greater_than_or_equal_to 0]
+  |> Changeset.validate_string_length Password [`min 12]
+  |> Changeset.validate_format Phone (Str.regexp "^\\+?[1-9][0-9]+$")
   |> validate_one_uppercase Password
 ]}
 
@@ -206,7 +206,7 @@ and the age. In json format it would be represented as:
 The changes in a changeset correspond to an heterogeneous map
 with bindings for keys of type ['a label] to values of type ['a].
 This structure allows us to incrementally build the changeset before
-calling [CSet.apply].
+calling [Changeset.apply].
 
 Remember that the job of the API is to generate passwords.
 As a consequence, when creating a new changeset we also have to generate a
@@ -219,11 +219,11 @@ let create json =
   let open Yojson.Basic.Util in
   let age = json |> member "age" |> to_int in
   let phone = json |> member "phone" |> to_string in
-  CSet.[Age => age; Phone => phone]
-  |> CSet.put_changes
-  |> CSet.put_change Password (generate_strong_password ())
+  Changeset.[Age => age; Phone => phone]
+  |> Changeset.put_changes
+  |> Changeset.put_change Password (generate_strong_password ())
   |> validate
-  |> CSet.apply
+  |> Changeset.apply
 ]}
 
 {2 Limitations}

@@ -4,7 +4,7 @@
   (kind ppx_deriver)
   (libraries (base ppxlib))
   (preprocess (pps (ppxlib.metaquot ppxlib.runner)))
-  (ppx_runtime_libraries (base changeset))
+  (ppx_runtime_libraries (base changeset_lib))
 ))
 
 (jbuild_version 1)

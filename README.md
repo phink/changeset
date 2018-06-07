@@ -30,7 +30,7 @@ boilerplate code.
 
 #### Install using opam
 ```
-$ opam pin add changeset https://github.com/phink/changeset.git
+$ opam pin add changeset_lib https://github.com/phink/changeset.git
 $ opam pin add ppx_changeset https://github.com/phink/changeset.git
 ```
 
@@ -52,20 +52,20 @@ type t = {
 
 let validate cset =
   cset
-  |> CSet.validate_int Age [`greater_than_or_equal_to 0]
-  |> CSet.validate_string_length Password [`min 12]
-  |> CSet.validate_format Phone (Str.regexp "^\\+?[1-9][0-9]+$")
+  |> Changeset.validate_int Age [`greater_than_or_equal_to 0]
+  |> Changeset.validate_string_length Password [`min 12]
+  |> Changeset.validate_format Phone (Str.regexp "^\\+?[1-9][0-9]+$")
 
 let create t =
-  let cset = CSet.from_record t in
-  CSet.apply (validate cset)
+  let cset = Changeset.from_record t in
+  Changeset.apply (validate cset)
 
 let data = {age = 12; password = "dolphin"; phone = "+14155552671"}
 
 let () = match create data with
   | Ok t -> (* do what you want *)
   | Error cset ->
-    Stdio.prerr_endline (CSet.show_errors cset)
+    Stdio.prerr_endline (Changeset.show_errors cset)
 ```
 
 Execution
