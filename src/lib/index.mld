@@ -2,7 +2,7 @@
 
 Data validation with first-class and first-order labels in OCaml.
 
-Library documentation {{:Changeset/index.html} can be found here}.
+Library documentation {{:Changeset_lib/index.html} can be found here}.
 
 This library takes its inspiration from the
 {{: https://hexdocs.pm/ecto/Ecto.Changeset.html} Ecto.Changeset} module
