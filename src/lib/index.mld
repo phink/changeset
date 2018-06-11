@@ -74,7 +74,7 @@ type 'a label =
 ]}
 
 It will also generate a module named [Changeset] of type
-{!module-Changeset.module-type-S} that provides, among others,
+{!module-Changeset_lib.module-type-S} that provides, among others,
 validation functions for the type [t].
 
 {4 The workflow}
