@@ -9,7 +9,7 @@
 **Data validation with first-class and first-order labels in OCaml.**
 
 Homepage for the library is
-[available here](https://phink.github.io/changeset/changeset/index.html).
+[available here](https://phink.github.io/changeset/changeset_lib/index.html).
 
 Changesets are tools to validate data while accumulating errors along the way.
 They are composed of:
